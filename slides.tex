@@ -1,0 +1,183 @@
+%\PassOptionsToPackage{cmyk}{xcolor}
+%\pdfpageattr {/Group << /S /Transparency /I false /CS /DeviceRGB>>}
+\documentclass[english,aspectratio=169,smaller]{beamer}
+
+%\usepackage[pdftex]{graphicx}
+
+%\usepackage[absolute,overlay]{textpos}
+%\setlength{\TPHorizModule}{1cm}
+%\setlength{\TPVertModule}{1cm}
+
+\usepackage{amssymb,amsmath}
+
+\usepackage{listings}
+
+\definecolor{grey}{rgb}{.5,.5,.5}
+\definecolor{red}{rgb}{.9,0,0}
+\definecolor{blue}{rgb}{0,0,.75}
+\definecolor{green}{rgb}{0.0,.5,0.0}
+%\definecolor{green}{rgb}{0,.6,0}
+\definecolor{magenta}{cmyk}{0,1,0,0}
+\definecolor{myyellow}{rgb}{.98,.84,.37}
+\newcommand{\black}{\color{black}}
+\newcommand{\white}{\color{white}}
+\newcommand{\grey}{\color{grey}}
+\newcommand{\red}{\color{red}}
+\newcommand{\blue}{\color{blue}}
+\newcommand{\green}{\color{green}}
+\newcommand{\magenta}{\color{magenta}}
+\newcommand{\orange}{\color{orange}}
+
+\DeclareMathOperator{\sgn}{sign}
+\DeclareMathOperator{\re}{Re}
+\DeclareMathOperator{\im}{Im}
+\DeclareMathOperator{\myspan}{span}
+\DeclareMathOperator{\Gl}{Gl}
+\DeclareMathOperator{\tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\kout}{k}
+\DeclareMathOperator{\kin}{l}
+
+
+\lstset{language=C++,
+                basicstyle=\ttfamily,
+                keywordstyle=\color{blue}\ttfamily,
+                stringstyle=\color{red}\ttfamily,
+                commentstyle=\color{green}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#}
+}
+\lstset{language=C++,
+                basicstyle=\ttfamily
+}
+
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,1.0}
+
+\lstset{
+backgroundcolor=\color{lbcolor},
+    tabsize=4,        
+    language=Python,
+    basicstyle=\scriptsize,
+    columns=fixed,
+    showstringspaces=false,
+    extendedchars=false,
+    breaklines=false,
+    breakindent=2cm,
+    prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+    frame=single,
+    numbers=left,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    linewidth=\textwidth,
+    xleftmargin=0.04\textwidth,
+    identifierstyle=\ttfamily,
+    keywordstyle=\color[rgb]{0,0.5,0},
+    commentstyle=\color[rgb]{0.6,0.1,0.0},
+    stringstyle=\color[rgb]{0.627,0.126,0.941},
+    numberstyle=\color[rgb]{0.205, 0.142, 0.73},
+    otherkeywords={__m512, __mmask16, complex, override, size_t},
+}
+
+%\usetheme{default}
+%\usetheme{CambridgeUS}
+\usepackage{../ess-beamer-simon/beamerthemeESS}
+\setbeamertemplate{navigation symbols}{}
+%\setbeamertemplate{footline}[frame number]
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    \insertframenumber/\inserttotalframenumber
+}
+
+\newcommand{\backupbegin}{
+   \newcounter{finalframe}
+   \setcounter{finalframe}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \setcounter{framenumber}{\value{finalframe}}
+}
+
+\graphicspath{{../../code/dataset/doc/},{./figs/}}
+
+\usepackage{xspace}
+\newcommand{\scipp}{\texttt{scipp}\xspace}
+
+\begin{document}
+
+\title{Dependency management: Lessons learned}
+\author[Simon Heybrock]{Simon Heybrock \\{\footnotesize\url{simon.heybrock@ess.eu}}\\\vspace{2mm}
+}
+%\institute[ESS]{European Spallation Source}
+
+\date{\scriptsize DMSC --- 2022-05-11}
+
+
+\begin{frame}[plain]
+    \titlepage
+\end{frame}
+
+
+%\begin{frame}
+%    \tableofcontents
+%\end{frame}
+
+
+\section{Introduction}
+\subsection{Previous experience}
+
+\begin{frame}{Context}
+  \begin{itemize}
+    \item Developing Python and/or C++ libraries and applications
+    \item Using GitHub (or similar) with Github Actions (or similar) to:
+      \begin{itemize}
+        \item Build and run tests for pull requests.
+        \item Build documentation.
+        \item Build conda packages.
+        \item Build PyPI wheels.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{Example: scipp, scippnexus, scippneutron, ess}
+    \begin{itemize}
+      \item Experienced issues in about 10 cases in 2021, such as:
+        \begin{itemize}
+          \item Pull request builds suddenly fail for no apparent reason.
+          \item Documentation builds stop working.
+          \item Package builds don't work any more.
+        \end{itemize}
+      \item \alert{\dots despite previously passing CI}, issue is *not* a bad merge.
+    \end{itemize}
+  \end{block}
+  \begin{block}{Previous approach}
+    \begin{itemize}
+      \item Waste time discussing the ``weird'' issue at the daily standup.
+      \item Dig through build logs: which package upgraded?
+      \item Does older version work? Check upstream for issue, or open one.
+      \item Pin version, restart all builds.
+      \item Open issue as a reminder to remove the pin once upstream made a fix.
+      \item Add pin across all projects.
+      \item Remove pins once possible, half the time it is unclear how to reproduce.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Concrete examples from 2022}
+  \begin{block}{\emph{Five} such issues is less than four months!}
+    \begin{description}
+      \item[February 18] Conan suddenly produces an error, caused by update of \texttt{markupsafe} \url{https://github.com/pallets/markupsafe/issues/282}.
+        Lost ability to make a (patch) release until we found this and pinned the version.
+      \item[March 24] Documentation builds stop working due to \url{https://github.com/jupyter/nbconvert/issues/1736} causes by \url{https://github.com/pallets/jinja/issues/1626}.
+        Lost ability to pass CI (blocking all merges) as well as blocking release builds (which build and update docs).
+      \item[April 1] We notice that navigation buttons in documentation pages have disappeared. The \texttt{sphinx-book-theme} 0.3.0 release causes this.
+      \item[April 7] \texttt{scikit-build} releases 0.14.0, breaking our PyPI builds.
+        Lost ability to make a (patch) release until we found this and pinned the version.
+      \item[April 19] We notice that plots no longer show up in documentation pages, traced to an \texttt{ipympl} update \url{https://github.com/matplotlib/ipympl/issues/462}.
+    \end{description}
+  \end{block}
+\end{frame}
+
+\end{document}
