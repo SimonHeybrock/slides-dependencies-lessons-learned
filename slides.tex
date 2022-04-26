@@ -1,6 +1,6 @@
 %\PassOptionsToPackage{cmyk}{xcolor}
 %\pdfpageattr {/Group << /S /Transparency /I false /CS /DeviceRGB>>}
-\documentclass[english,aspectratio=169,smaller]{beamer}
+\documentclass[english,aspectratio=1610,smaller]{beamer}
 
 %\usepackage[pdftex]{graphicx}
 
@@ -11,6 +11,7 @@
 \usepackage{amssymb,amsmath}
 
 \usepackage{listings}
+\usepackage[normalem]{ulem}
 
 \definecolor{grey}{rgb}{.5,.5,.5}
 \definecolor{red}{rgb}{.9,0,0}
@@ -103,6 +104,10 @@ backgroundcolor=\color{lbcolor},
 
 \usepackage{xspace}
 \newcommand{\scipp}{\texttt{scipp}\xspace}
+\newcommand{\scippneutron}{\texttt{scippneutron}\xspace}
+\newcommand{\scippnexus}{\texttt{scippnexus}\xspace}
+\newcommand{\pip}{\texttt{pip}\xspace}
+\newcommand{\conda}{\texttt{conda}\xspace}
 
 \begin{document}
 
@@ -132,7 +137,7 @@ backgroundcolor=\color{lbcolor},
     \item Developing Python and/or C++ libraries and applications
     \item Using GitHub (or similar) with Github Actions (or similar) to:
       \begin{itemize}
-        \item Build and run tests for pull requests.
+        \item Build and run tests for pull requests (PRs).
         \item Build documentation.
         \item Build conda packages.
         \item Build PyPI wheels.
@@ -177,6 +182,98 @@ backgroundcolor=\color{lbcolor},
         Lost ability to make a (patch) release until we found this and pinned the version.
       \item[April 19] We notice that plots no longer show up in documentation pages, traced to an \texttt{ipympl} update \url{https://github.com/matplotlib/ipympl/issues/462}.
     \end{description}
+  \end{block}
+  By continuously upgrading, we experience \emph{almost every upstream issue}, even if it is fixed without hours or days.
+\end{frame}
+
+
+\begin{frame}{Recommended reading}
+  \begin{block}{Approach}
+    \begin{itemize}
+      \item Step 1: Read \url{https://hynek.me/articles/semver-will-not-save-you/}. Recommends to freeze everything, including transitive dependencies.
+      \item Step 2: \alt<2>
+        {\sout{Conclude that we cannot do that because if we do that for a \emph{library} almost no one will be able to use it.}}
+        {Conclude that we cannot do that because if we do that for a \emph{library} almost no one will be able to use it.}
+      \item<2-> Step 3: Realize that many or most of our dependency issues are not issues that ever reach a user.
+        Actually we can freeze for quite a few cases:
+        \begin{itemize}
+          \item Building documentation.
+          \item Requirements need for building packages.
+          \item Pull-request builds.
+        \end{itemize}
+      \item<2-> Step 4: Must read for more details and better understanding:
+        \url{https://iscinumpy.dev/post/bound-version-constraints/}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\begin{frame}{Implementation}
+  \begin{block}{Requirement: All builds should be \emph{reproducible}}
+    Reproducible means:
+    \begin{itemize}
+      \item Builds for a commit that passed previously should continue passing if we re-run it later.
+      \item Builds should fail \emph{only} when there is a problem in the \emph{current} source repository, \emph{not} if a dependency or transitive dependency makes a release.
+    \end{itemize}
+    This requirement applies to ``everything'':
+    \begin{itemize}
+      \item Going back to much older version, e.g., to make a patch release.
+      \item Documentation builds (Sphinx).
+      \item Release builds (making packages for PyPI and conda).
+      \item PR builds.
+      \item Builds on \texttt{main} after merging a PR.
+      \item \dots
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{Workflow}
+  \begin{enumerate}
+    \item Write (multiple) \texttt{requirements.in} files.
+    \item Use \texttt{pip-compile} from \texttt{pip-tools}. See also \texttt{pip-compile-multi}.
+    \item Resulting \texttt{requirements.txt} is \emph{checked into version control}.
+    \item Do this for \emph{everything} this is needed for your builds.
+    \item From time to time, go to 2.)
+    \begin{itemize}
+      \item \texttt{dependabot} may be an alternative, but it updates individual requirements, which seems too noisy for us, with too little control.
+    \end{itemize}
+  \item Make patch-releases ``quickly'' when a dependency update causes issues for users
+    \begin{itemize}
+      \item Much rarer than issues we experience in development.
+      \item Users can freeze dependency version \emph{when setting up their environment} as a immediate workaround.
+    \end{itemize}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Does it work?}
+  \begin{itemize}
+    \item We do \emph{not} have long term experience with this yet:
+      \begin{itemize}
+        \item So far implemented only in \url{https://github.com/scipp/scippnexus}
+        \item Have not gone through update cycles (re-run of \texttt{pip-compile}) and do not know how many headaches this will cause.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Case study: Should we freeze dependencies in PR builds?}
+  To be alerted early of upstream changes that break our package, we may be tempted to always use the latest released version.
+  For example, the PR jobs that run the unit tests for \scippnexus could use the latest \scipp.
+  Would this be a good idea?
+  \begin{itemize}
+    \item A new contributor, Alice, opens a PR with a small bugfix.
+    \item The builds do not pass, since a completely unrelated test is failing (because there was a unrelated dependency update).
+      Alice is confused.
+    \item Bob, the project maintainer figures out that what the issue is, explains it in the PR, fixed the issue, merges into \texttt{main}, merges \texttt{main} into the PR, explains that all is good now, \dots
+    \item Alice is frustrated by the delay and noise and moves on.
+    \item Bob is frustrated because he has to do things like this all the time.
+  \end{itemize}
+  \begin{block}{Better solution: Freeze all dependencies for PR builds to \emph{decouple}}
+    \begin{itemize}
+      \item A new contributor, Alice, opens a PR with a small bugfix. Builds pass and it gets merged. Alice is happy and may continue contributing.
+      \item \emph{Independently}, Bob notices that a new upstream release requires a fix.
+        He re-runs \texttt{pip-compile} and fixes the issue in a PR.
+        After a merge, all future PR builds will now use the new upstream version.
+    \end{itemize}
   \end{block}
 \end{frame}
 
