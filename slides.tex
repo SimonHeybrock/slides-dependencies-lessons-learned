@@ -128,9 +128,10 @@ backgroundcolor=\color{lbcolor},
 %    \tableofcontents
 %\end{frame}
 
+%TODO headings
 
 \section{Introduction}
-\subsection{Previous experience}
+%\subsection{Previous experience}
 
 \begin{frame}{Context}
   \begin{itemize}
@@ -145,7 +146,7 @@ backgroundcolor=\color{lbcolor},
   \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}{Problem}
   \begin{block}{Example: scipp, scippnexus, scippneutron, ess}
     \begin{itemize}
       \item Experienced issues in about 10 cases in 2021, such as:
@@ -154,7 +155,7 @@ backgroundcolor=\color{lbcolor},
           \item Documentation builds stop working.
           \item Package builds don't work any more.
         \end{itemize}
-      \item \alert{\dots despite previously passing CI}, issue is *not* a bad merge.
+      \item \alert{\dots despite previously passing CI}, issue is \emph{not} a bad merge.
     \end{itemize}
   \end{block}
   \begin{block}{Previous approach}
@@ -186,6 +187,7 @@ backgroundcolor=\color{lbcolor},
   By continuously upgrading, we experience \emph{almost every upstream issue}, even if it is fixed without hours or days.
 \end{frame}
 
+\section{Solution}
 
 \begin{frame}{Recommended reading}
   \begin{block}{Approach}
@@ -228,46 +230,61 @@ backgroundcolor=\color{lbcolor},
 \end{frame}
 
 \begin{frame}{Workflow}
-  \begin{enumerate}
-    \item Write (multiple) \texttt{requirements.in} files.
-    \item Use \texttt{pip-compile} from \texttt{pip-tools}. See also \texttt{pip-compile-multi}.
-    \item Resulting \texttt{requirements.txt} is \emph{checked into version control}.
-    \item Do this for \emph{everything} this is needed for your builds.
-    \item From time to time, go to 2.)
+  \begin{block}{Setup (example for Python-based project with \texttt{pip} workflow)}
+    \begin{enumerate}
+      \item Write \texttt{requirements.in} file(s).
+        Do this for \emph{everything} this is needed for your builds.
+      \item Use \texttt{pip-compile} from \texttt{pip-tools}. See also \texttt{pip-compile-multi}.
+        Resulting \texttt{requirements.txt} is \emph{checked into version control}.
+      \item Treat \emph{warnings as errors} in CI, in particular \texttt{DeprecationWarning}
+        \begin{itemize}
+          \item Avoids issues from \emph{intentional} breaking changes, since we can take action early.
+        \end{itemize}
+    \end{enumerate}
+  \end{block}
+  \begin{block}{Continuously and from time-to-time}
     \begin{itemize}
-      \item \texttt{dependabot} may be an alternative, but it updates individual requirements, which seems too noisy for us, with too little control.
+      \item Re-run \texttt{pip-compile}, run all the builds (including release builds!) and check that things work, merge.
+        \begin{itemize}
+          \item \texttt{dependabot} may be an alternative, but it updates individual requirements, which seems too noisy for us, with too little control.
+        \end{itemize}
+      \item Make patch-releases when a dependency update causes issues for users
+        \begin{itemize}
+          \item Much rarer than issues we experience in development.
+          \item Treating \texttt{DeprecationWarning} as errors should catch many issues months/years ahead.
+          \item Users can freeze dependency version \emph{when setting up their environment} as a immediate workaround.
+        \end{itemize}
     \end{itemize}
-  \item Make patch-releases ``quickly'' when a dependency update causes issues for users
-    \begin{itemize}
-      \item Much rarer than issues we experience in development.
-      \item Users can freeze dependency version \emph{when setting up their environment} as a immediate workaround.
-    \end{itemize}
-  \end{enumerate}
+  \end{block}
 \end{frame}
 
 \begin{frame}{Does it work?}
   \begin{itemize}
     \item We do \emph{not} have long term experience with this yet:
       \begin{itemize}
-        \item So far implemented only in \url{https://github.com/scipp/scippnexus}
+        \item So far implemented in \url{https://github.com/scipp/scippnexus} and \url{https://github.com/scipp/scipp} (excluding C++ build dependencies).
         \item Have not gone through update cycles (re-run of \texttt{pip-compile}) and do not know how many headaches this will cause.
       \end{itemize}
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Case study: Should we freeze dependencies in PR builds?}
-  To be alerted early of upstream changes that break our package, we may be tempted to always use the latest released version.
-  For example, the PR jobs that run the unit tests for \scippnexus could use the latest \scipp.
-  Would this be a good idea?
-  \begin{itemize}
+  %To be alerted early of upstream changes that break our package, we may be tempted to always use the latest released version.
+  %For example, the PR jobs that run the unit tests for \scippnexus could use the latest \scipp.
+  \begin{block}{Temptation: Use latest version of library dependencies to be alerted early of upstream changes}
+    Would this be a good idea?
+    \pause
+  \begin{itemize}[<+->]
     \item A new contributor, Alice, opens a PR with a small bugfix.
     \item The builds do not pass, since a completely unrelated test is failing (because there was a unrelated dependency update).
       Alice is confused.
-    \item Bob, the project maintainer figures out that what the issue is, explains it in the PR, fixed the issue, merges into \texttt{main}, merges \texttt{main} into the PR, explains that all is good now, \dots
+    \item Bob, the project maintainer, figures out that what the issue is, explains it in the PR, fixes the issue, merges into \texttt{main}, merges \texttt{main} into the PR, explains that all is good now, \dots
     \item Alice is frustrated by the delay and noise and moves on.
     \item Bob is frustrated because he has to do things like this all the time.
   \end{itemize}
-  \begin{block}{Better solution: Freeze all dependencies for PR builds to \emph{decouple}}
+  \end{block}
+  \pause
+  \begin{block}{Better solution: Freeze all dependencies for PR builds to \emph{decouple} the tasks}
     \begin{itemize}
       \item A new contributor, Alice, opens a PR with a small bugfix. Builds pass and it gets merged. Alice is happy and may continue contributing.
       \item \emph{Independently}, Bob notices that a new upstream release requires a fix.
