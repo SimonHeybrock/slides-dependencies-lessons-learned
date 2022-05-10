@@ -1,12 +1,4 @@
-%\PassOptionsToPackage{cmyk}{xcolor}
-%\pdfpageattr {/Group << /S /Transparency /I false /CS /DeviceRGB>>}
 \documentclass[english,aspectratio=1610,smaller]{beamer}
-
-%\usepackage[pdftex]{graphicx}
-
-%\usepackage[absolute,overlay]{textpos}
-%\setlength{\TPHorizModule}{1cm}
-%\setlength{\TPVertModule}{1cm}
 
 \usepackage{amssymb,amsmath}
 
@@ -17,7 +9,6 @@
 \definecolor{red}{rgb}{.9,0,0}
 \definecolor{blue}{rgb}{0,0,.75}
 \definecolor{green}{rgb}{0.0,.5,0.0}
-%\definecolor{green}{rgb}{0,.6,0}
 \definecolor{magenta}{cmyk}{0,1,0,0}
 \definecolor{myyellow}{rgb}{.98,.84,.37}
 \newcommand{\black}{\color{black}}
@@ -29,60 +20,8 @@
 \newcommand{\magenta}{\color{magenta}}
 \newcommand{\orange}{\color{orange}}
 
-\DeclareMathOperator{\sgn}{sign}
-\DeclareMathOperator{\re}{Re}
-\DeclareMathOperator{\im}{Im}
-\DeclareMathOperator{\myspan}{span}
-\DeclareMathOperator{\Gl}{Gl}
-\DeclareMathOperator{\tr}{Tr}
-\DeclareMathOperator{\diag}{diag}
-\DeclareMathOperator{\kout}{k}
-\DeclareMathOperator{\kin}{l}
-
-
-\lstset{language=C++,
-                basicstyle=\ttfamily,
-                keywordstyle=\color{blue}\ttfamily,
-                stringstyle=\color{red}\ttfamily,
-                commentstyle=\color{green}\ttfamily,
-                morecomment=[l][\color{magenta}]{\#}
-}
-\lstset{language=C++,
-                basicstyle=\ttfamily
-}
-
-\definecolor{listinggray}{gray}{0.9}
-\definecolor{lbcolor}{rgb}{0.9,0.9,1.0}
-
-\lstset{
-backgroundcolor=\color{lbcolor},
-    tabsize=4,        
-    language=Python,
-    basicstyle=\scriptsize,
-    columns=fixed,
-    showstringspaces=false,
-    extendedchars=false,
-    breaklines=false,
-    breakindent=2cm,
-    prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
-    frame=single,
-    numbers=left,
-    showtabs=false,
-    showspaces=false,
-    showstringspaces=false,
-    linewidth=\textwidth,
-    xleftmargin=0.04\textwidth,
-    identifierstyle=\ttfamily,
-    keywordstyle=\color[rgb]{0,0.5,0},
-    commentstyle=\color[rgb]{0.6,0.1,0.0},
-    stringstyle=\color[rgb]{0.627,0.126,0.941},
-    numberstyle=\color[rgb]{0.205, 0.142, 0.73},
-    otherkeywords={__m512, __mmask16, complex, override, size_t},
-}
-
-%\usetheme{default}
-%\usetheme{CambridgeUS}
-\usepackage{../ess-beamer-simon/beamerthemeESS}
+% git clone git@github.com:SimonHeybrock/latex-beamer-theme-ess.git
+\usepackage{../latex-beamer-theme-ess/beamerthemeESS}
 \setbeamertemplate{navigation symbols}{}
 %\setbeamertemplate{footline}[frame number]
 \addtobeamertemplate{navigation symbols}{}{%
@@ -100,8 +39,6 @@ backgroundcolor=\color{lbcolor},
    \setcounter{framenumber}{\value{finalframe}}
 }
 
-\graphicspath{{../../code/dataset/doc/},{./figs/}}
-
 \usepackage{xspace}
 \newcommand{\scipp}{\texttt{scipp}\xspace}
 \newcommand{\scippneutron}{\texttt{scippneutron}\xspace}
@@ -112,12 +49,10 @@ backgroundcolor=\color{lbcolor},
 \begin{document}
 
 \title{Dependency management: Lessons learned}
-\author[Simon Heybrock]{Simon Heybrock \\{\footnotesize\url{simon.heybrock@ess.eu}}\\\vspace{2mm}
-}
-%\institute[ESS]{European Spallation Source}
+\author[Simon Heybrock]{Simon Heybrock \\{\footnotesize\url{simon.heybrock@ess.eu}}\\\vspace{2mm}}
+\institute{European Spallation Source / DMSC / 2022-05-11}
 
-\date{\scriptsize DMSC --- 2022-05-11}
-
+\date{}
 
 \begin{frame}[plain]
     \titlepage
