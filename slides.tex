@@ -235,7 +235,7 @@ backgroundcolor=\color{lbcolor},
         \end{itemize}
     \end{enumerate}
   \end{block}
-  \begin{block}{Continuously and from time-to-time}
+  \begin{block}{From time to time}
     \begin{itemize}
       \item Re-run \texttt{pip-compile}, run all the builds (including release builds!) and check that things work, merge.
         \begin{itemize}
@@ -259,14 +259,19 @@ backgroundcolor=\color{lbcolor},
         \item Have not gone through update cycles (re-run of \texttt{pip-compile}) and do not know how many headaches this will cause.
       \end{itemize}
     \item Our \texttt{conan} dependencies have been pinned since the beginning.
-    \item \texttt{conda} dependencies are not pinned yet. What is best use of tools for keeing this up to date, including pins of transitive dependencies?
+    \item \texttt{conda} dependencies are not pinned yet.
+      What is best use of tools for keeing this up to date, including pins of transitive dependencies?
+      \begin{itemize}
+        \item Does the \texttt{conda-forge} global pinning help?
+          See \url{https://conda-forge.org/docs/maintainer/pinning_deps.html}.
+      \end{itemize}
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Case study: Should we freeze dependencies in PR builds?}
   %To be alerted early of upstream changes that break our package, we may be tempted to always use the latest released version.
   %For example, the PR jobs that run the unit tests for \scippnexus could use the latest \scipp.
-  \begin{block}{Temptation: Use latest version of library dependencies to be alerted early of upstream changes}
+  \begin{block}{Temptation: \emph{Use latest version of library dependencies to be alerted early of upstream changes}}
     Would this be a good idea?
     \pause
   \begin{itemize}[<+->]
