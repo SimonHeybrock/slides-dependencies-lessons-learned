@@ -161,7 +161,7 @@
   \begin{block}{Setup (example for Python-based project with \texttt{pip} workflow)}
     \begin{enumerate}
       \item Write \texttt{requirements.in} file(s).
-        Do this for \emph{everything} this is needed for your builds.
+        Do this for \emph{everything} that is needed for your builds.
       \item Use \texttt{pip-compile} from \texttt{pip-tools}. See also \texttt{pip-compile-multi}.
         Resulting \texttt{requirements.txt} is \emph{checked into version control}.
       \item Treat \emph{warnings as errors} in CI, in particular \texttt{DeprecationWarning}
