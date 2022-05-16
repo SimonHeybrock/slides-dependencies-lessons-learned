@@ -101,7 +101,8 @@
 
 \begin{frame}[fragile]{Concrete examples from 2022}
   \vspace{-2mm}
-  \begin{block}{\sout{\emph{Five}} Six such issues in less than four months!}
+  \footnotesize
+  \begin{block}{\sout{\emph{Five}} \sout{Six} \emph{Seven} such issues in less than four months!}
     \begin{description}
       \item[February 18] Conan suddenly produces an error, caused by update of \texttt{markupsafe} \url{https://github.com/pallets/markupsafe/issues/282}.
         Lost ability to make a (patch) release until we found this and pinned the version.
@@ -112,6 +113,7 @@
         Lost ability to make a (patch) release until we found this and pinned the version.
       \item[April 19] We notice that plots no longer show up in documentation pages, traced to an \texttt{ipympl} update \url{https://github.com/matplotlib/ipympl/issues/462}.
       \item[May 12] All Linux builds broken by \texttt{mamba} 0.23.1 patch release \url{https://github.com/mamba-org/mamba/issues/1669}.
+      \item[May 12] All Windows builds broken by \texttt{MSVC} update from 19.31.31107.0 to 19.32.31328.0 in \texttt{windows-latest} Github workflow image.
     \end{description}
   \end{block}
   By continuously upgrading, we see \emph{almost every upstream issue}, even if fixed within hours/days.
